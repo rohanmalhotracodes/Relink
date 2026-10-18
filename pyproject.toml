@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "relink"
+version = "0.1.0"
+description = "Relink: a connected-data repair agent powered by FalkorDB."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+  "cryptography>=43",
+  "falkordb>=1.2.0,<2",
+  "fastapi",
+  "httpx",
+  "jinja2",
+  "mcp>=1.0,<2",
+  "openai>=1.50",
+  "pydantic>=2",
+  "pydantic-settings",
+  "python-dotenv",
+  "rich",
+  "ruamel-yaml",
+  "sqlglot",
+  "typer",
+  "uvicorn[standard]",
+]
+
+[project.optional-dependencies]
+demo = [
+  "dbt-core",
+  "dbt-duckdb",
+]
+
+[dependency-groups]
+dev = [
+  "pytest",
+  "ruff",
+]
+
+[project.scripts]
+relink = "repair_agent.cli:app"
+falkordb-mcp = "repair_agent.falkordb_io.mcp:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/repair_agent"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 124
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]

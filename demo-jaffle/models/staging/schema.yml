@@ -1,0 +1,22 @@
+version: 2
+models:
+  - name: stg_orders
+    description: Normalized order records with a stable customer_id contract.
+    columns:
+      - {name: order_id, description: Order identifier, tests: [unique, not_null]}
+      - {name: customer_id, description: Stable customer identifier exposed to downstream models}
+      - {name: order_date, description: Date the order was placed}
+      - {name: status, description: Current order status}
+  - name: stg_customers
+    description: Normalized customer records.
+    columns:
+      - {name: customer_id, description: Customer identifier, tests: [unique, not_null]}
+      - {name: first_name, description: Customer first name}
+      - {name: last_name, description: Customer last name}
+  - name: stg_payments
+    description: Normalized payment records.
+    columns:
+      - {name: payment_id, description: Payment identifier, tests: [unique, not_null]}
+      - {name: order_id, description: Associated order identifier}
+      - {name: payment_method, description: Payment method}
+      - {name: amount, description: Payment amount in dollars}

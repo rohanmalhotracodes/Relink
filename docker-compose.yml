@@ -1,0 +1,16 @@
+services:
+  falkordb:
+    image: falkordb/falkordb:latest
+    ports:
+      - "${FALKORDB_PORT:-6379}:6379"
+      - "${FALKORDB_BROWSER_PORT:-3001}:3000"
+    volumes:
+      - falkordb-data:/var/lib/falkordb/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 2s
+      retries: 20
+
+volumes:
+  falkordb-data:

@@ -1,0 +1,24 @@
+version: 2
+models:
+  - name: orders
+    description: Order facts enriched with payment totals.
+    columns:
+      - {name: order_id, description: Order identifier, tests: [unique, not_null]}
+      - {name: customer_id, description: Stable customer identifier}
+      - {name: order_date, description: Date the order was placed}
+      - {name: status, description: Current order status}
+      - {name: credit_card_amount, description: Credit-card amount}
+      - {name: coupon_amount, description: Coupon amount}
+      - {name: bank_transfer_amount, description: Bank-transfer amount}
+      - {name: gift_card_amount, description: Gift-card amount}
+      - {name: amount, description: Total payment amount}
+  - name: customers
+    description: Customer order and lifetime-value metrics.
+    columns:
+      - {name: customer_id, description: Customer identifier, tests: [unique, not_null]}
+      - {name: first_name, description: Customer first name}
+      - {name: last_name, description: Customer last name}
+      - {name: first_order, description: First order date}
+      - {name: most_recent_order, description: Most recent order date}
+      - {name: number_of_orders, description: Order count}
+      - {name: customer_lifetime_value, description: Lifetime payment total}

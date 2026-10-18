@@ -1,0 +1,18 @@
+datasets:
+  dataset:shop_prod.analytics.stg_orders: {kind: dbt_model, sql: demo-warehouse/models/staging/stg_orders.sql, schema_yml: demo-warehouse/models/staging/schema.yml, model_name: stg_orders}
+  dataset:shop_prod.analytics.stg_customers: {kind: dbt_model, sql: demo-warehouse/models/staging/stg_customers.sql, schema_yml: demo-warehouse/models/staging/schema.yml, model_name: stg_customers}
+  dataset:shop_prod.analytics.stg_order_items: {kind: dbt_model, sql: demo-warehouse/models/staging/stg_order_items.sql, schema_yml: demo-warehouse/models/staging/schema.yml, model_name: stg_order_items}
+  dataset:shop_prod.analytics.stg_products: {kind: dbt_model, sql: demo-warehouse/models/staging/stg_products.sql, schema_yml: demo-warehouse/models/staging/schema.yml, model_name: stg_products}
+  dataset:shop_prod.analytics.stg_web_events: {kind: dbt_model, sql: demo-warehouse/models/staging/stg_web_events.sql, schema_yml: demo-warehouse/models/staging/schema.yml, model_name: stg_web_events}
+  dataset:shop_prod.analytics.fct_orders: {kind: dbt_model, sql: demo-warehouse/models/marts/fct_orders.sql, schema_yml: demo-warehouse/models/marts/schema.yml, model_name: fct_orders}
+  dataset:shop_prod.analytics.dim_customers: {kind: dbt_model, sql: demo-warehouse/models/marts/dim_customers.sql, schema_yml: demo-warehouse/models/marts/schema.yml, model_name: dim_customers}
+  dataset:shop_prod.analytics.dim_products: {kind: dbt_model, sql: demo-warehouse/models/marts/dim_products.sql, schema_yml: demo-warehouse/models/marts/schema.yml, model_name: dim_products}
+  dataset:shop_prod.analytics.mart_daily_revenue: {kind: dbt_model, sql: demo-warehouse/models/marts/mart_daily_revenue.sql, schema_yml: demo-warehouse/models/marts/schema.yml, model_name: mart_daily_revenue}
+  dataset:shop_prod.analytics.mart_customer_ltv: {kind: dbt_model, sql: demo-warehouse/models/marts/mart_customer_ltv.sql, schema_yml: demo-warehouse/models/marts/schema.yml, model_name: mart_customer_ltv}
+  dataset:shop_prod.analytics.mart_product_performance: {kind: dbt_model, sql: demo-warehouse/models/marts/mart_product_performance.sql, schema_yml: demo-warehouse/models/marts/schema.yml, model_name: mart_product_performance}
+
+datajobs:
+  job:shopflow_daily.extract_recent_orders:
+    kind: airflow_task
+    file: demo-warehouse/dags/shopflow_daily.py
+    sql_constants: [RECENT_ORDERS_SQL]

@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+.git
+.github
+.relink
+.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/node_modules
+**/dist
+**/target
+**/logs
+media/raw
+media/build

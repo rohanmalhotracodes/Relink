@@ -1,0 +1,79 @@
+schema_version: 1
+airflow:
+  dag_id: jaffle_shop_ci
+  jobs: {}
+  dependencies: []
+
+column_types:
+  jaffle_shop.raw.raw_orders:
+    id: INTEGER
+    user_id: INTEGER
+    order_date: DATE
+    status: VARCHAR
+  jaffle_shop.raw.raw_customers:
+    id: INTEGER
+    first_name: VARCHAR
+    last_name: VARCHAR
+  jaffle_shop.raw.raw_payments:
+    id: INTEGER
+    order_id: INTEGER
+    payment_method: VARCHAR
+    amount: INTEGER
+  jaffle_shop.analytics.stg_orders:
+    order_id: INTEGER
+    customer_id: INTEGER
+    order_date: DATE
+    status: VARCHAR
+  jaffle_shop.analytics.stg_customers:
+    customer_id: INTEGER
+    first_name: VARCHAR
+    last_name: VARCHAR
+  jaffle_shop.analytics.stg_payments:
+    payment_id: INTEGER
+    order_id: INTEGER
+    payment_method: VARCHAR
+    amount: DECIMAL(18,2)
+  jaffle_shop.analytics.orders:
+    order_id: INTEGER
+    customer_id: INTEGER
+    order_date: DATE
+    status: VARCHAR
+    credit_card_amount: DECIMAL(18,2)
+    coupon_amount: DECIMAL(18,2)
+    bank_transfer_amount: DECIMAL(18,2)
+    gift_card_amount: DECIMAL(18,2)
+    amount: DECIMAL(18,2)
+  jaffle_shop.analytics.customers:
+    customer_id: INTEGER
+    first_name: VARCHAR
+    last_name: VARCHAR
+    first_order: DATE
+    most_recent_order: DATE
+    number_of_orders: INTEGER
+    customer_lifetime_value: DECIMAL(18,2)
+
+column_lineage:
+  - [jaffle_shop.raw.raw_orders, id, jaffle_shop.analytics.stg_orders, order_id, ALIAS]
+  - [jaffle_shop.raw.raw_orders, user_id, jaffle_shop.analytics.stg_orders, customer_id, ALIAS]
+  - [jaffle_shop.raw.raw_orders, order_date, jaffle_shop.analytics.stg_orders, order_date, IDENTITY]
+  - [jaffle_shop.raw.raw_orders, status, jaffle_shop.analytics.stg_orders, status, IDENTITY]
+  - [jaffle_shop.raw.raw_customers, id, jaffle_shop.analytics.stg_customers, customer_id, ALIAS]
+  - [jaffle_shop.raw.raw_customers, first_name, jaffle_shop.analytics.stg_customers, first_name, IDENTITY]
+  - [jaffle_shop.raw.raw_customers, last_name, jaffle_shop.analytics.stg_customers, last_name, IDENTITY]
+  - [jaffle_shop.raw.raw_payments, id, jaffle_shop.analytics.stg_payments, payment_id, ALIAS]
+  - [jaffle_shop.raw.raw_payments, order_id, jaffle_shop.analytics.stg_payments, order_id, IDENTITY]
+  - [jaffle_shop.raw.raw_payments, payment_method, jaffle_shop.analytics.stg_payments, payment_method, IDENTITY]
+  - [jaffle_shop.raw.raw_payments, amount, jaffle_shop.analytics.stg_payments, amount, SCALE]
+  - [jaffle_shop.analytics.stg_orders, order_id, jaffle_shop.analytics.orders, order_id, IDENTITY]
+  - [jaffle_shop.analytics.stg_orders, customer_id, jaffle_shop.analytics.orders, customer_id, IDENTITY]
+  - [jaffle_shop.analytics.stg_orders, order_date, jaffle_shop.analytics.orders, order_date, IDENTITY]
+  - [jaffle_shop.analytics.stg_orders, status, jaffle_shop.analytics.orders, status, IDENTITY]
+  - [jaffle_shop.analytics.stg_payments, amount, jaffle_shop.analytics.orders, amount, SUM]
+  - [jaffle_shop.analytics.stg_customers, customer_id, jaffle_shop.analytics.customers, customer_id, IDENTITY]
+  - [jaffle_shop.analytics.stg_customers, first_name, jaffle_shop.analytics.customers, first_name, IDENTITY]
+  - [jaffle_shop.analytics.stg_customers, last_name, jaffle_shop.analytics.customers, last_name, IDENTITY]
+  - [jaffle_shop.analytics.orders, customer_id, jaffle_shop.analytics.customers, customer_id, IDENTITY]
+  - [jaffle_shop.analytics.orders, order_date, jaffle_shop.analytics.customers, first_order, MIN]
+  - [jaffle_shop.analytics.orders, order_date, jaffle_shop.analytics.customers, most_recent_order, MAX]
+  - [jaffle_shop.analytics.orders, order_id, jaffle_shop.analytics.customers, number_of_orders, COUNT]
+  - [jaffle_shop.analytics.orders, amount, jaffle_shop.analytics.customers, customer_lifetime_value, SUM]

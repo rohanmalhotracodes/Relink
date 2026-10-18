@@ -1,0 +1,43 @@
+sources:
+  raw_orders: dataset:jaffle_shop.raw.raw_orders
+  raw_customers: dataset:jaffle_shop.raw.raw_customers
+  raw_payments: dataset:jaffle_shop.raw.raw_payments
+
+datasets:
+  dataset:jaffle_shop.analytics.stg_orders:
+    kind: dbt_model
+    sql: demo-jaffle/models/staging/stg_orders.sql
+    repo_path: models/staging/stg_orders.sql
+    schema_yml: demo-jaffle/models/staging/schema.yml
+    schema_repo_path: models/staging/schema.yml
+    model_name: stg_orders
+  dataset:jaffle_shop.analytics.stg_customers:
+    kind: dbt_model
+    sql: demo-jaffle/models/staging/stg_customers.sql
+    repo_path: models/staging/stg_customers.sql
+    schema_yml: demo-jaffle/models/staging/schema.yml
+    schema_repo_path: models/staging/schema.yml
+    model_name: stg_customers
+  dataset:jaffle_shop.analytics.stg_payments:
+    kind: dbt_model
+    sql: demo-jaffle/models/staging/stg_payments.sql
+    repo_path: models/staging/stg_payments.sql
+    schema_yml: demo-jaffle/models/staging/schema.yml
+    schema_repo_path: models/staging/schema.yml
+    model_name: stg_payments
+  dataset:jaffle_shop.analytics.orders:
+    kind: dbt_model
+    sql: demo-jaffle/models/orders.sql
+    repo_path: models/orders.sql
+    schema_yml: demo-jaffle/models/marts/schema.yml
+    schema_repo_path: models/schema.yml
+    model_name: orders
+  dataset:jaffle_shop.analytics.customers:
+    kind: dbt_model
+    sql: demo-jaffle/models/customers.sql
+    repo_path: models/customers.sql
+    schema_yml: demo-jaffle/models/marts/schema.yml
+    schema_repo_path: models/schema.yml
+    model_name: customers
+
+datajobs: {}

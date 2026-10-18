@@ -1,0 +1,217 @@
+# Runtime-neutral metadata that complements the dbt YAML files. The ingester combines
+# this file with dbt schemas/SQL, the Airflow DAG, and code_map.yml.
+schema_version: 1
+airflow:
+  dag_id: shopflow_daily
+  jobs:
+    extract_recent_orders:
+      reads:
+        - [shop_prod.raw.orders, order_id]
+        - [shop_prod.raw.orders, customer_id]
+        - [shop_prod.raw.orders, order_placed_at]
+        - [shop_prod.raw.orders, gross_amount]
+    refresh_product_catalog:
+      reads:
+        - [shop_prod.raw.products, product_id]
+        - [shop_prod.raw.products, sku]
+        - [shop_prod.raw.products, product_name]
+        - [shop_prod.raw.products, category]
+        - [shop_prod.raw.products, list_price]
+    run_dbt_staging:
+      reads_datasets:
+        - shop_prod.raw.orders
+        - shop_prod.raw.customers
+        - shop_prod.raw.order_items
+        - shop_prod.raw.products
+        - shop_prod.raw.web_events
+      writes_datasets:
+        - shop_prod.analytics.stg_orders
+        - shop_prod.analytics.stg_customers
+        - shop_prod.analytics.stg_order_items
+        - shop_prod.analytics.stg_products
+        - shop_prod.analytics.stg_web_events
+    run_dbt_marts:
+      reads_datasets:
+        - shop_prod.analytics.stg_orders
+        - shop_prod.analytics.stg_customers
+        - shop_prod.analytics.stg_order_items
+        - shop_prod.analytics.stg_products
+      writes_datasets:
+        - shop_prod.analytics.fct_orders
+        - shop_prod.analytics.dim_customers
+        - shop_prod.analytics.dim_products
+        - shop_prod.analytics.mart_daily_revenue
+        - shop_prod.analytics.mart_customer_ltv
+        - shop_prod.analytics.mart_product_performance
+  dependencies:
+    - [extract_recent_orders, run_dbt_staging]
+    - [refresh_product_catalog, run_dbt_staging]
+    - [run_dbt_staging, run_dbt_marts]
+column_types:
+  shop_prod.raw.orders:
+    order_id: NUMBER(38,0)
+    customer_id: NUMBER(38,0)
+    order_placed_at: TIMESTAMP_NTZ
+    order_status: VARCHAR(32)
+    gross_amount: NUMBER(12,2)
+    discount_amount: NUMBER(12,2)
+    currency_code: VARCHAR(3)
+  shop_prod.raw.customers:
+    customer_id: NUMBER(38,0)
+    email: VARCHAR(255)
+    full_name: VARCHAR(255)
+    signup_date: DATE
+    country_code: VARCHAR(2)
+    marketing_opt_in: BOOLEAN
+  shop_prod.raw.order_items:
+    order_item_id: NUMBER(38,0)
+    order_id: NUMBER(38,0)
+    product_id: NUMBER(38,0)
+    quantity: NUMBER(10,0)
+    unit_price: NUMBER(12,2)
+  shop_prod.raw.products:
+    product_id: NUMBER(38,0)
+    sku: VARCHAR(64)
+    product_name: VARCHAR(255)
+    category: VARCHAR(64)
+    list_price: NUMBER(12,2)
+  shop_prod.raw.web_events:
+    event_id: VARCHAR(64)
+    session_id: VARCHAR(64)
+    customer_id: NUMBER(38,0)
+    event_type: VARCHAR(32)
+    event_at: TIMESTAMP_NTZ
+    page_url: VARCHAR(1024)
+  shop_prod.analytics.stg_orders:
+    order_id: NUMBER(38,0)
+    customer_id: NUMBER(38,0)
+    order_placed_at: TIMESTAMP_NTZ
+    order_status: VARCHAR(32)
+    gross_amount: NUMBER(12,2)
+    net_amount: NUMBER(12,2)
+  shop_prod.analytics.stg_customers:
+    customer_id: NUMBER(38,0)
+    email: VARCHAR(255)
+    full_name: VARCHAR(255)
+    signup_date: DATE
+    country_code: VARCHAR(2)
+    marketing_opt_in: BOOLEAN
+  shop_prod.analytics.stg_order_items:
+    order_item_id: NUMBER(38,0)
+    order_id: NUMBER(38,0)
+    product_id: NUMBER(38,0)
+    quantity: NUMBER(10,0)
+    unit_price: NUMBER(12,2)
+    line_total: NUMBER(22,2)
+  shop_prod.analytics.stg_products:
+    product_id: NUMBER(38,0)
+    sku: VARCHAR(64)
+    product_name: VARCHAR(255)
+    category: VARCHAR(64)
+    list_price: NUMBER(12,2)
+  shop_prod.analytics.stg_web_events:
+    event_id: VARCHAR(64)
+    session_id: VARCHAR(64)
+    customer_id: NUMBER(38,0)
+    event_type: VARCHAR(32)
+    event_at: TIMESTAMP_NTZ
+  shop_prod.analytics.fct_orders:
+    order_id: NUMBER(38,0)
+    customer_id: NUMBER(38,0)
+    order_date: DATE
+    order_status: VARCHAR(32)
+    item_count: NUMBER(38,0)
+    net_revenue: NUMBER(12,2)
+  shop_prod.analytics.dim_customers:
+    customer_id: NUMBER(38,0)
+    email: VARCHAR(255)
+    full_name: VARCHAR(255)
+    signup_date: DATE
+    country_code: VARCHAR(2)
+    is_marketable: BOOLEAN
+  shop_prod.analytics.dim_products:
+    product_id: NUMBER(38,0)
+    sku: VARCHAR(64)
+    product_name: VARCHAR(255)
+    category: VARCHAR(64)
+    list_price: NUMBER(12,2)
+  shop_prod.analytics.mart_daily_revenue:
+    order_date: DATE
+    order_count: NUMBER(38,0)
+    gross_revenue: NUMBER(18,2)
+  shop_prod.analytics.mart_customer_ltv:
+    customer_id: NUMBER(38,0)
+    country_code: VARCHAR(2)
+    lifetime_orders: NUMBER(38,0)
+    lifetime_revenue: NUMBER(18,2)
+    first_order_date: DATE
+  shop_prod.analytics.mart_product_performance:
+    product_id: NUMBER(38,0)
+    sku: VARCHAR(64)
+    category: VARCHAR(64)
+    units_sold: NUMBER(38,0)
+    revenue: NUMBER(18,2)
+
+# Each edge is source dataset/column -> produced dataset/column. `alias_boundary`
+# records where the original name is intentionally insulated by an output alias.
+column_lineage:
+  - [shop_prod.raw.orders, order_id, shop_prod.analytics.stg_orders, order_id, IDENTITY]
+  - [shop_prod.raw.orders, customer_id, shop_prod.analytics.stg_orders, customer_id, IDENTITY]
+  - [shop_prod.raw.orders, order_placed_at, shop_prod.analytics.stg_orders, order_placed_at, IDENTITY]
+  - [shop_prod.raw.orders, order_status, shop_prod.analytics.stg_orders, order_status, IDENTITY]
+  - [shop_prod.raw.orders, gross_amount, shop_prod.analytics.stg_orders, gross_amount, IDENTITY]
+  - [shop_prod.raw.orders, gross_amount, shop_prod.analytics.stg_orders, net_amount, ARITHMETIC]
+  - [shop_prod.raw.orders, discount_amount, shop_prod.analytics.stg_orders, net_amount, ARITHMETIC]
+  - [shop_prod.raw.customers, customer_id, shop_prod.analytics.stg_customers, customer_id, IDENTITY]
+  - [shop_prod.raw.customers, email, shop_prod.analytics.stg_customers, email, IDENTITY]
+  - [shop_prod.raw.customers, full_name, shop_prod.analytics.stg_customers, full_name, IDENTITY]
+  - [shop_prod.raw.customers, signup_date, shop_prod.analytics.stg_customers, signup_date, IDENTITY]
+  - [shop_prod.raw.customers, country_code, shop_prod.analytics.stg_customers, country_code, IDENTITY]
+  - [shop_prod.raw.customers, marketing_opt_in, shop_prod.analytics.stg_customers, marketing_opt_in, IDENTITY]
+  - [shop_prod.raw.order_items, order_item_id, shop_prod.analytics.stg_order_items, order_item_id, IDENTITY]
+  - [shop_prod.raw.order_items, order_id, shop_prod.analytics.stg_order_items, order_id, IDENTITY]
+  - [shop_prod.raw.order_items, product_id, shop_prod.analytics.stg_order_items, product_id, IDENTITY]
+  - [shop_prod.raw.order_items, quantity, shop_prod.analytics.stg_order_items, quantity, IDENTITY]
+  - [shop_prod.raw.order_items, unit_price, shop_prod.analytics.stg_order_items, unit_price, IDENTITY]
+  - [shop_prod.raw.order_items, quantity, shop_prod.analytics.stg_order_items, line_total, MULTIPLY]
+  - [shop_prod.raw.order_items, unit_price, shop_prod.analytics.stg_order_items, line_total, MULTIPLY]
+  - [shop_prod.raw.products, product_id, shop_prod.analytics.stg_products, product_id, IDENTITY]
+  - [shop_prod.raw.products, sku, shop_prod.analytics.stg_products, sku, IDENTITY]
+  - [shop_prod.raw.products, product_name, shop_prod.analytics.stg_products, product_name, IDENTITY]
+  - [shop_prod.raw.products, category, shop_prod.analytics.stg_products, category, IDENTITY]
+  - [shop_prod.raw.products, list_price, shop_prod.analytics.stg_products, list_price, IDENTITY]
+  - [shop_prod.raw.web_events, event_id, shop_prod.analytics.stg_web_events, event_id, IDENTITY]
+  - [shop_prod.raw.web_events, session_id, shop_prod.analytics.stg_web_events, session_id, IDENTITY]
+  - [shop_prod.raw.web_events, customer_id, shop_prod.analytics.stg_web_events, customer_id, IDENTITY]
+  - [shop_prod.raw.web_events, event_type, shop_prod.analytics.stg_web_events, event_type, IDENTITY]
+  - [shop_prod.raw.web_events, event_at, shop_prod.analytics.stg_web_events, event_at, IDENTITY]
+  - [shop_prod.analytics.stg_orders, order_id, shop_prod.analytics.fct_orders, order_id, IDENTITY]
+  - [shop_prod.analytics.stg_orders, customer_id, shop_prod.analytics.fct_orders, customer_id, IDENTITY]
+  - [shop_prod.analytics.stg_orders, order_placed_at, shop_prod.analytics.fct_orders, order_date, CAST]
+  - [shop_prod.analytics.stg_orders, order_status, shop_prod.analytics.fct_orders, order_status, IDENTITY]
+  - [shop_prod.analytics.stg_orders, net_amount, shop_prod.analytics.fct_orders, net_revenue, ALIAS]
+  - [shop_prod.analytics.stg_order_items, order_id, shop_prod.analytics.fct_orders, item_count, COUNT]
+  - [shop_prod.analytics.stg_customers, customer_id, shop_prod.analytics.dim_customers, customer_id, IDENTITY]
+  - [shop_prod.analytics.stg_customers, email, shop_prod.analytics.dim_customers, email, IDENTITY]
+  - [shop_prod.analytics.stg_customers, full_name, shop_prod.analytics.dim_customers, full_name, IDENTITY]
+  - [shop_prod.analytics.stg_customers, signup_date, shop_prod.analytics.dim_customers, signup_date, IDENTITY]
+  - [shop_prod.analytics.stg_customers, country_code, shop_prod.analytics.dim_customers, country_code, IDENTITY]
+  - [shop_prod.analytics.stg_customers, marketing_opt_in, shop_prod.analytics.dim_customers, is_marketable, COALESCE]
+  - [shop_prod.analytics.stg_products, product_id, shop_prod.analytics.dim_products, product_id, IDENTITY]
+  - [shop_prod.analytics.stg_products, sku, shop_prod.analytics.dim_products, sku, IDENTITY]
+  - [shop_prod.analytics.stg_products, product_name, shop_prod.analytics.dim_products, product_name, IDENTITY]
+  - [shop_prod.analytics.stg_products, category, shop_prod.analytics.dim_products, category, IDENTITY]
+  - [shop_prod.analytics.stg_products, list_price, shop_prod.analytics.dim_products, list_price, IDENTITY]
+  - [shop_prod.analytics.fct_orders, order_date, shop_prod.analytics.mart_daily_revenue, order_date, IDENTITY]
+  - [shop_prod.analytics.fct_orders, order_id, shop_prod.analytics.mart_daily_revenue, order_count, COUNT]
+  - [shop_prod.analytics.fct_orders, net_revenue, shop_prod.analytics.mart_daily_revenue, gross_revenue, SUM]
+  - [shop_prod.analytics.dim_customers, customer_id, shop_prod.analytics.mart_customer_ltv, customer_id, IDENTITY]
+  - [shop_prod.analytics.dim_customers, country_code, shop_prod.analytics.mart_customer_ltv, country_code, IDENTITY]
+  - [shop_prod.analytics.fct_orders, order_id, shop_prod.analytics.mart_customer_ltv, lifetime_orders, COUNT]
+  - [shop_prod.analytics.fct_orders, net_revenue, shop_prod.analytics.mart_customer_ltv, lifetime_revenue, SUM]
+  - [shop_prod.analytics.fct_orders, order_date, shop_prod.analytics.mart_customer_ltv, first_order_date, MIN]
+  - [shop_prod.analytics.dim_products, product_id, shop_prod.analytics.mart_product_performance, product_id, IDENTITY]
+  - [shop_prod.analytics.dim_products, sku, shop_prod.analytics.mart_product_performance, sku, IDENTITY]
+  - [shop_prod.analytics.dim_products, category, shop_prod.analytics.mart_product_performance, category, IDENTITY]
+  - [shop_prod.analytics.stg_order_items, quantity, shop_prod.analytics.mart_product_performance, units_sold, SUM]
+  - [shop_prod.analytics.stg_order_items, line_total, shop_prod.analytics.mart_product_performance, revenue, SUM]

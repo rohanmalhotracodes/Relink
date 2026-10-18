@@ -1,0 +1,44 @@
+# Private planning docs — not for publication
+IDEA.md
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Orchestration artifacts (private)
+plans/
+STATUS.md
+.agents/
+.claude/
+skills-lock.json
+scratch/
+
+# Build / tool caches
+.pytest_cache/
+.ruff_cache/
+demo-warehouse/target/
+demo-warehouse/logs/
+demo-warehouse/.relink/applied_drift.json
+node_modules/
+dist/
+demo-warehouse/.relink/reset_audit.json
+.relink/
+
+# Video working files (final deliverables committed explicitly)
+media/*.webm
+media/raw/
+media/build/
+media/panels/png/

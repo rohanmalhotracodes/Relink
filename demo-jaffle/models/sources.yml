@@ -1,0 +1,26 @@
+version: 2
+sources:
+  - name: raw
+    database: jaffle_shop
+    schema: raw
+    tables:
+      - name: raw_orders
+        description: Seed-backed source orders used by the GitHub-native Relink demo.
+        columns:
+          - {name: id, description: Source order identifier, tests: [not_null]}
+          - {name: user_id, description: Source customer identifier}
+          - {name: order_date, description: Date the order was placed}
+          - {name: status, description: Current order status}
+      - name: raw_customers
+        description: Seed-backed source customers.
+        columns:
+          - {name: id, description: Source customer identifier, tests: [not_null]}
+          - {name: first_name, description: Customer first name}
+          - {name: last_name, description: Customer last name}
+      - name: raw_payments
+        description: Seed-backed source payments.
+        columns:
+          - {name: id, description: Source payment identifier, tests: [not_null]}
+          - {name: order_id, description: Associated order identifier}
+          - {name: payment_method, description: Payment method}
+          - {name: amount, description: Payment amount in cents}
