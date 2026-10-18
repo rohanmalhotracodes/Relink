@@ -113,4 +113,5 @@ def test_github_app_creates_one_atomic_compare_before_write_commit(tmp_path: Pat
             }
         ],
     }
-    assert calls[-1][0] == "PATCH" and calls[-1][2] == {"sha": "new-commit", "force": False}
+    assert calls[-1][0] == "PATCH" and calls[-1][1].endswith("/git/refs/heads/demo/schema-break")
+    assert calls[-1][2] == {"sha": "new-commit", "force": False}

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 import hashlib
 import hmac
@@ -102,8 +103,20 @@ class GitHubAppClient:
         if any(path.is_absolute() or ".." in path.parts for path in paths):
             raise ValueError("Repair file paths must stay inside the repository.")
 
-        ref_path = f"/repos/{repository}/git/ref/heads/{branch}"
-        ref = await self._request("GET", ref_path)
+        read_ref_path = f"/repos/{repository}/git/ref/heads/{branch}"
+        update_ref_path = f"/repos/{repository}/git/refs/heads/{branch}"
+        ref: dict[str, Any] = {}
+        for attempt in range(3):
+            try:
+                ref = await self._request("GET", read_ref_path)
+                break
+            except httpx.HTTPStatusError as exc:
+                # A just-opened pull request can briefly race GitHub's ref API even
+                # though the webhook payload already names the branch. Retry only
+                # that eventual-consistency case; every other response fails fast.
+                if exc.response.status_code != 404 or attempt == 2:
+                    raise
+                await asyncio.sleep(0.5 * (attempt + 1))
         parent_sha = str(ref.get("object", {}).get("sha", ""))
         if not parent_sha:
             raise RuntimeError(f"GitHub returned no head commit for branch {branch!r}.")
@@ -147,7 +160,8 @@ class GitHubAppClient:
         commit_sha = str(commit.get("sha", ""))
         if not commit_sha:
             raise RuntimeError("GitHub returned no SHA for the repair commit.")
-        await self._request("PATCH", ref_path, json={"sha": commit_sha, "force": False})
+        # GitHub uses singular `ref` for reads and plural `refs` for updates.
+        await self._request("PATCH", update_ref_path, json={"sha": commit_sha, "force": False})
         return str(commit.get("html_url") or f"https://github.com/{repository}/commit/{commit_sha}")
 
     async def _request(
